@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "erp-card-voucher-agent"
+version = "0.1.0"
+description = "Streamlit-based ERP corporate card voucher automation agent"
+authors = ["user <user@example.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pandas = "^2.2.3"
+streamlit = "^1.44.0"
+openpyxl = "^3.1.5"
+pyyaml = "^6.0.2"
+openai = "^1.76.0"
+python-dotenv = "^1.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

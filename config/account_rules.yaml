@@ -1,0 +1,25 @@
+default:
+  cost_group: 판매비와관리비
+  account_subject: 복리후생비
+
+department_rules:
+  생산팀:
+    cost_group: 제조원가
+    account_subject: 제조경비
+  영업팀:
+    cost_group: 판매비와관리비
+    account_subject: 여비교통비
+  관리팀:
+    cost_group: 판매비와관리비
+    account_subject: 복리후생비
+
+category_overrides:
+  식당:
+    cost_group: 판매비와관리비
+    account_subject: 복리후생비
+  호텔:
+    cost_group: 판매비와관리비
+    account_subject: 여비교통비
+  주유:
+    cost_group: 판매비와관리비
+    account_subject: 여비교통비
