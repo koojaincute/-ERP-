@@ -153,7 +153,9 @@ def _is_empty_value(value: object) -> bool:
 
 
 def _fill_only_empty(base: pd.Series, generated: pd.Series) -> pd.Series:
-    result = base.copy()
+    # Streamlit Cloud/Pandas versions can enforce strict dtype assignment.
+    # Cast to object so empty numeric columns can safely receive text values.
+    result = base.astype("object").copy()
     for idx in result.index:
         if _is_empty_value(result.loc[idx]):
             result.loc[idx] = generated.loc[idx]
