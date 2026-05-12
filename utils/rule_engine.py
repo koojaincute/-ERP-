@@ -56,10 +56,12 @@ def infer_summary_by_rules(
     hour: int,
     user_name: str = "",
     policy_text: str = "",
+    detail_text: str = "",
 ) -> tuple[str, str]:
     merchant_l = (merchant or "").lower()
     category_l = (category or "").lower()
-    merged = f"{merchant_l} {category_l}"
+    detail_l = (detail_text or "").lower()
+    merged = f"{merchant_l} {category_l} {detail_l}"
     dynamic = _build_dynamic_keywords(policy_text)
     dynamic_vehicle = dynamic.get("vehicle", [])
     dynamic_travel = dynamic.get("travel", [])
@@ -81,14 +83,24 @@ def infer_summary_by_rules(
     if any(k in merged for k in STAY_KEYWORDS):
         return "출장 숙박비", "규칙: 숙박 키워드"
 
+    has_post_office = ("우체국" in merged) or ("우정사업본부" in merged)
+    if has_post_office and any(k in merged for k in POST_OFFICE_EXEMPT_KEYWORDS):
+        return "우편요금", "규칙: 우체국 우편요금 키워드"
+    if has_post_office and any(k in merged for k in POST_OFFICE_TAXABLE_KEYWORDS):
+        return "우체국 택배비", "규칙: 우체국 택배비 키워드"
+    if has_post_office:
+        return "우편요금", "규칙: 우체국 기본 적요"
+
     if any(k in merged for k in CAFE_KEYWORDS):
         return "간식대(차대)", "규칙: 카페/베이커리 키워드"
     meal_detected = any(k in merged for k in (MEAL_KEYWORDS + MEAL_MERCHANT_HINTS + dynamic_meal))
-    if 11 <= hour <= 13 and meal_detected:
+    welfare_detected = any(k in merged for k in ["복리후생", "복리후생비", "사내복지", "직원복지"])
+    meal_context = meal_detected or welfare_detected
+    if 11 <= hour <= 13 and meal_context:
         return "중식대", "규칙: 11:30~13:30 식대 시간대"
-    if hour >= 18 and meal_detected:
-        return "야근 식대", "규칙: 18:30 이후 식대 시간대"
-    if meal_detected:
+    if hour >= 18 and meal_context:
+        return "석식대", "규칙: 18:30 이후 식대 시간대"
+    if meal_context:
         return "식대", "규칙: 식음료 키워드"
 
     if any(k in merged for k in (SAAS_KEYWORDS + dynamic_saas)):
@@ -102,12 +114,13 @@ def infer_vat_by_rules(
     category: str,
     policy_text: str,
     amount: float = 0,
+    detail_text: str = "",
 ) -> tuple[str, str]:
     # NOTE:
     # policy_text contains the full rule document and must NOT be mixed into
     # keyword matching. Otherwise every row can match unrelated keywords from
     # the document and become over-classified as 불공제.
-    merged = f"{merchant} {category}".lower()
+    merged = f"{merchant} {category} {detail_text}".lower()
     dynamic = _build_dynamic_keywords(policy_text)
     dynamic_vehicle = dynamic.get("vehicle", [])
     dynamic_travel = dynamic.get("travel", [])

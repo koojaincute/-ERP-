@@ -34,6 +34,9 @@ CANONICAL_COLUMN_ALIASES: Dict[str, list[str]] = {
     "vat_amount": ["부가세", "vat_amount"],
     "card_no_masked": ["카드번호", "카드번호(마스킹)", "card_no_masked"],
     "approval_no": ["승인번호", "approval_no"],
+    "approval_date": ["승인일", "승인일자", "결제일", "거래일", "approval_date"],
+    "approval_time": ["승인시간", "결제시간", "거래시간", "approval_time"],
+    "summary_text": ["적요", "내역", "메모", "비고", "summary_text"],
 }
 
 EXTRACT_OUTPUT_COLUMNS = [
@@ -113,6 +116,19 @@ def normalize_card_dataframe(df: pd.DataFrame) -> Tuple[pd.DataFrame, list[str]]
         normalized["transaction_datetime"] = pd.to_datetime(
             normalized["transaction_datetime"], errors="coerce"
         )
+    else:
+        normalized["transaction_datetime"] = pd.NaT
+
+    # 승인일/승인시간이 분리된 양식을 지원한다.
+    if "approval_date" in normalized.columns:
+        if "approval_time" in normalized.columns:
+            date_text = normalized["approval_date"].astype(str).fillna("")
+            time_text = normalized["approval_time"].astype(str).fillna("")
+            combined = (date_text.str.strip() + " " + time_text.str.strip()).str.strip()
+            combined_dt = pd.to_datetime(combined, errors="coerce")
+        else:
+            combined_dt = pd.to_datetime(normalized["approval_date"], errors="coerce")
+        normalized["transaction_datetime"] = normalized["transaction_datetime"].fillna(combined_dt)
     if "amount" in normalized.columns:
         normalized["amount"] = (
             normalized["amount"]

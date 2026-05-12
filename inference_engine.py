@@ -91,6 +91,7 @@ def infer_summary_and_vat(
     amount: float,
     policy_text: str,
     user_name: str = "",
+    detail_text: str = "",
     use_llm: bool = True,
 ) -> InferenceResult:
     summary_hint, summary_reason = infer_summary_by_rules(
@@ -99,12 +100,14 @@ def infer_summary_and_vat(
         hour=transaction_hour,
         user_name=user_name,
         policy_text=policy_text,
+        detail_text=detail_text,
     )
     vat_hint, vat_reason = infer_vat_by_rules(
         merchant=merchant_name,
         category=merchant_category,
         policy_text=policy_text,
         amount=amount,
+        detail_text=detail_text,
     )
     fallback = InferenceResult(
         summary_text=summary_hint,
@@ -114,6 +117,16 @@ def infer_summary_and_vat(
     )
 
     if not use_llm:
+        return fallback
+
+    # 시간대 식대/우체국 적요는 내부 규칙을 강제 적용한다.
+    strict_summary_reasons = [
+        "규칙: 11:30~13:30 식대 시간대",
+        "규칙: 18:30 이후 식대 시간대",
+        "규칙: 우체국 우편요금 키워드",
+        "규칙: 우체국 기본 적요",
+    ]
+    if any(reason in summary_reason for reason in strict_summary_reasons):
         return fallback
 
     try:

@@ -48,8 +48,11 @@ def process_transactions(
             effective_org_chart["users"] = users
         merchant_name = str(row.get("merchant_name", ""))
         merchant_category = str(row.get("merchant_category", ""))
+        detail_text = str(row.get("summary_text", ""))
         amount = float(row.get("amount", 0) or 0)
-        cancel_flag = amount < 0 or any(k in f"{merchant_name} {merchant_category}" for k in ["취소", "cancel", "승인취소"])
+        cancel_flag = amount < 0 or any(
+            k in f"{merchant_name} {merchant_category} {detail_text}" for k in ["취소", "cancel", "승인취소"]
+        )
 
         mapping = classify_account(
             user_name=effective_user_name,
@@ -74,6 +77,7 @@ def process_transactions(
                 amount=amount,
                 policy_text=policy_text,
                 user_name=effective_user_name,
+                detail_text=detail_text,
                 use_llm=use_llm,
             )
             summary_text = infer.summary_text
