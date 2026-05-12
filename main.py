@@ -70,16 +70,28 @@ def process_transactions(
             vat_deduction = "불공제"
             infer_reason = "취소 거래 예외 규칙 적용"
         else:
-            infer = infer_summary_and_vat(
-                merchant_name=merchant_name,
-                merchant_category=merchant_category,
-                transaction_hour=hour,
-                amount=amount,
-                policy_text=policy_text,
-                user_name=effective_user_name,
-                detail_text=detail_text,
-                use_llm=use_llm,
-            )
+            try:
+                infer = infer_summary_and_vat(
+                    merchant_name=merchant_name,
+                    merchant_category=merchant_category,
+                    transaction_hour=hour,
+                    amount=amount,
+                    policy_text=policy_text,
+                    user_name=effective_user_name,
+                    detail_text=detail_text,
+                    use_llm=use_llm,
+                )
+            except TypeError:
+                # Compatibility fallback for older inference_engine signatures.
+                infer = infer_summary_and_vat(
+                    merchant_name=merchant_name,
+                    merchant_category=merchant_category,
+                    transaction_hour=hour,
+                    amount=amount,
+                    policy_text=policy_text,
+                    user_name=effective_user_name,
+                    use_llm=use_llm,
+                )
             summary_text = infer.summary_text
             vat_deduction = infer.vat_deduction
             infer_reason = infer.reason

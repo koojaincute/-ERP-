@@ -94,21 +94,40 @@ def infer_summary_and_vat(
     detail_text: str = "",
     use_llm: bool = True,
 ) -> InferenceResult:
-    summary_hint, summary_reason = infer_summary_by_rules(
-        merchant=merchant_name,
-        category=merchant_category,
-        hour=transaction_hour,
-        user_name=user_name,
-        policy_text=policy_text,
-        detail_text=detail_text,
-    )
-    vat_hint, vat_reason = infer_vat_by_rules(
-        merchant=merchant_name,
-        category=merchant_category,
-        policy_text=policy_text,
-        amount=amount,
-        detail_text=detail_text,
-    )
+    try:
+        summary_hint, summary_reason = infer_summary_by_rules(
+            merchant=merchant_name,
+            category=merchant_category,
+            hour=transaction_hour,
+            user_name=user_name,
+            policy_text=policy_text,
+            detail_text=detail_text,
+        )
+    except TypeError:
+        # Compatibility fallback for older rule_engine signatures.
+        summary_hint, summary_reason = infer_summary_by_rules(
+            merchant=merchant_name,
+            category=merchant_category,
+            hour=transaction_hour,
+            user_name=user_name,
+            policy_text=policy_text,
+        )
+    try:
+        vat_hint, vat_reason = infer_vat_by_rules(
+            merchant=merchant_name,
+            category=merchant_category,
+            policy_text=policy_text,
+            amount=amount,
+            detail_text=detail_text,
+        )
+    except TypeError:
+        # Compatibility fallback for older rule_engine signatures.
+        vat_hint, vat_reason = infer_vat_by_rules(
+            merchant=merchant_name,
+            category=merchant_category,
+            policy_text=policy_text,
+            amount=amount,
+        )
     fallback = InferenceResult(
         summary_text=summary_hint,
         vat_deduction=vat_hint,
